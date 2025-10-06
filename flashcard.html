@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Kanji Flashcards</title>
+<style>
+  body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+  #card { border: 2px solid #333; border-radius: 10px; width: 300px; margin: auto; padding: 20px; }
+  .kanji { font-size: 5em; margin-bottom: 20px; }
+  .info { font-size: 1.2em; margin-top: 10px; display: none; }
+  button { margin-top: 15px; padding: 10px 20px; font-size: 1em; }
+</style>
+</head>
+<body>
+
+<h2>Kanji Flashcards (Test Mode)</h2>
+<div id="card">
+  <div class="kanji" id="kanji">Loading...</div>
+  <div class="info" id="meaning"></div>
+  <div class="info" id="pronunciation"></div>
+</div>
+<button id="showBtn">Show Answer</button>
+<button id="nextBtn">Next Kanji</button>
+
+<script>
+const SHEET_API_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLiS-pxUj0-8fyCTTT9klGHDWGaFB9My_BvZAHejDSPQquGqL9wgRVl79slaJ8pofzmEb78plpdnhciN0UIHzgD5UjZIibvexntfCi_mptGaM504ABuI0lRLMEIGs4LFPaFZi6r_O6qi_d7KE-o89_OFHYSpXukasI_T3sH6ibyG5v2CDqk0_jFP-Mpy8mvUHrVLmzNcwNKDF18Bp6O73Dof3t_zcDOTJl0latgy6kAkh-J569fIOjrqorskeXSPRDFKHhZvEogysdpnNjPiXUN5cF0zRg&lib=M6PEZBxOZ8t36v5_8OwXhAwvQOQADXBUv"; // Replace with your deployed Apps Script URL
+
+let kanjiList = [];
+let remaining = [];
+let used = [];
+let currentCard = null;
+
+// Load JSON from Apps Script
+async function loadSheetData() {
+  const res = await fetch(SHEET_API_URL);
+  kanjiList = await res.json();
+  remaining = [...kanjiList];
+  showNextKanji();
+}
+
+// Show the next kanji (hide answer initially)
+function showNextKanji() {
+  if (remaining.length === 0) {
+    alert("All kanji shown! Restarting.");
+    remaining = [...used];
+    used = [];
+  }
+
+  const index = Math.floor(Math.random() * remaining.length);
+  currentCard = remaining.splice(index, 1)[0];
+  used.push(currentCard);
+
+  document.getElementById("kanji").textContent = currentCard.kanji;
+  document.getElementById("meaning").textContent = currentCard.meaning;
+  document.getElementById("pronunciation").textContent = currentCard.pronunciation;
+
+  // Hide meaning and pronunciation until user clicks "Show Answer"
+  document.getElementById("meaning").style.display = "none";
+  document.getElementById("pronunciation").style.display = "none";
+}
+
+// Reveal meaning and pronunciation
+function showAnswer() {
+  document.getElementById("meaning").style.display = "block";
+  document.getElementById("pronunciation").style.display = "block";
+}
+
+// Button event listeners
+document.getElementById("showBtn").addEventListener("click", showAnswer);
+document.getElementById("nextBtn").addEventListener("click", showNextKanji);
+
+// Start
+loadSheetData();
+</script>
+
+</body>
+</html>
