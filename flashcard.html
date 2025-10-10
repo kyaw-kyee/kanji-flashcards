@@ -8,6 +8,7 @@
   #card { border: 2px solid #333; border-radius: 10px; width: 300px; margin: auto; padding: 20px; }
   .kanji { font-size: 5em; margin-bottom: 20px; }
   .info { font-size: 1.2em; margin-top: 10px; display: none; }
+  #progress { margin-top: 20px; font-size: 1em; color: #555; }
   button { margin-top: 15px; padding: 10px 20px; font-size: 1em; }
 </style>
 </head>
@@ -19,12 +20,13 @@
   <div class="info" id="meaning"></div>
   <div class="info" id="pronunciation"></div>
 </div>
+<div id="progress">Learned: 0 / 0 | Remaining: 0</div>
 <button id="showBtn">Show Answer</button>
 <button id="nextBtn">Next Kanji</button>
 
 <script>
-const SHEET_API_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLiS-pxUj0-8fyCTTT9klGHDWGaFB9My_BvZAHejDSPQquGqL9wgRVl79slaJ8pofzmEb78plpdnhciN0UIHzgD5UjZIibvexntfCi_mptGaM504ABuI0lRLMEIGs4LFPaFZi6r_O6qi_d7KE-o89_OFHYSpXukasI_T3sH6ibyG5v2CDqk0_jFP-Mpy8mvUHrVLmzNcwNKDF18Bp6O73Dof3t_zcDOTJl0latgy6kAkh-J569fIOjrqorskeXSPRDFKHhZvEogysdpnNjPiXUN5cF0zRg&lib=M6PEZBxOZ8t36v5_8OwXhAwvQOQADXBUv"; // Replace with your deployed Apps Script URL
-
+const SHEET_API_URL = "YOUR_APPS_SCRIPT_URL_HERE"; 
+// Replace with your deployed Apps Script URL
 
 let kanjiList = [];
 let remaining = [];
@@ -33,10 +35,16 @@ let currentCard = null;
 
 // Load JSON from Apps Script
 async function loadSheetData() {
-  const res = await fetch(SHEET_API_URL);
-  kanjiList = await res.json();
-  remaining = [...kanjiList];
-  showNextKanji();
+  try {
+    const res = await fetch(SHEET_API_URL);
+    if (!res.ok) throw new Error("Failed to fetch sheet data");
+    kanjiList = await res.json();
+    remaining = [...kanjiList];
+    showNextKanji();
+  } catch (err) {
+    document.getElementById("kanji").textContent = "Error loading data";
+    console.error(err);
+  }
 }
 
 // Show the next kanji (hide answer initially)
@@ -58,6 +66,8 @@ function showNextKanji() {
   // Hide meaning and pronunciation until user clicks "Show Answer"
   document.getElementById("meaning").style.display = "none";
   document.getElementById("pronunciation").style.display = "none";
+
+  updateProgress();
 }
 
 // Reveal meaning and pronunciation
@@ -66,9 +76,24 @@ function showAnswer() {
   document.getElementById("pronunciation").style.display = "block";
 }
 
+// Update progress (learned, total, remaining)
+function updateProgress() {
+  const total = kanjiList.length;
+  const learned = used.length;
+  const left = remaining.length;
+  document.getElementById("progress").textContent =
+    `Learned: ${learned} / ${total} | Remaining: ${left}`;
+}
+
 // Button event listeners
 document.getElementById("showBtn").addEventListener("click", showAnswer);
 document.getElementById("nextBtn").addEventListener("click", showNextKanji);
+
+// Keyboard shortcuts (optional)
+document.addEventListener("keydown", (e) => {
+  if (e.key === " ") showAnswer();     // Space = show answer
+  if (e.key === "Enter") showNextKanji(); // Enter = next card
+});
 
 // Start
 loadSheetData();
